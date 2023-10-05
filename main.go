@@ -33,6 +33,8 @@ func main() {
 
 	// Load the routes
 	routes.AuthRoutes(r)
+	// load html files
+	r.LoadHTMLGlob("*.html")
 
 	// Run the server
 	r.Run(":8080")

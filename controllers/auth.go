@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"auth/models"
+	"io"
+	"net/http"
 	"time"
 
 	"auth/utils"
@@ -18,6 +20,11 @@ func Login(c *gin.Context) {
 	var user models.User
 
 	if err := c.ShouldBindJSON(&user); err != nil {
+		if err == io.EOF {
+			// Handle empty request body
+			c.JSON(400, gin.H{"error": "Request body is empty"})
+			return
+		}
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
@@ -32,7 +39,6 @@ func Login(c *gin.Context) {
 	}
 
 	errHash := utils.CompareHashPassword(user.Password, existingUser.Password)
-
 	if !errHash {
 		c.JSON(400, gin.H{"error": "invalid password"})
 		return
@@ -65,6 +71,12 @@ func SignUp(c *gin.Context) {
 	var user models.User
 
 	if err := c.ShouldBindJSON(&user); err != nil {
+		if err == io.EOF {
+			// Handle empty request body
+			c.JSON(400, gin.H{"error": "Request body is empty"})
+			return
+		}
+		// Handle other JSON parsing errors
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
@@ -93,15 +105,14 @@ func SignUp(c *gin.Context) {
 
 func Home(c *gin.Context) {
 
+	c.HTML(http.StatusOK, "index.html", gin.H{})
 	cookie, err := c.Cookie("token")
-
 	if err != nil {
 		c.JSON(401, gin.H{"error": "unauthorized"})
 		return
 	}
 
 	claims, err := utils.ParseToken(cookie)
-
 	if err != nil {
 		c.JSON(401, gin.H{"error": "unauthorized"})
 		return
