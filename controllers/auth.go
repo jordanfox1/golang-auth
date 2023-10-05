@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"auth/models"
+	"fmt"
 	"io"
 	"net/http"
 	"time"
@@ -18,6 +19,9 @@ var jwtKey = []byte("my_secret_key")
 func Login(c *gin.Context) {
 
 	var user models.User
+
+	body := c.Request.Body
+	fmt.Println(body)
 
 	if err := c.ShouldBindJSON(&user); err != nil {
 		if err == io.EOF {
@@ -65,6 +69,7 @@ func Login(c *gin.Context) {
 
 	c.SetCookie("token", tokenString, int(expirationTime.Unix()), "/", "localhost", false, true)
 	c.JSON(200, gin.H{"success": "user logged in"})
+	c.HTML(http.StatusOK, "index.html", gin.H{})
 }
 
 func SignUp(c *gin.Context) {
@@ -105,7 +110,6 @@ func SignUp(c *gin.Context) {
 
 func Home(c *gin.Context) {
 
-	c.HTML(http.StatusOK, "index.html", gin.H{})
 	cookie, err := c.Cookie("token")
 	if err != nil {
 		c.JSON(401, gin.H{"error": "unauthorized"})
